@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { typeData } from "@/lib/vaps-data";
 import { readableAccentColor, surfaceAccentColor } from "@/lib/vaps-color-utils";
-import { fallbackGroupColor, groupColors } from "@/lib/vaps-group-colors";
+import {
+  fallbackGroupBlockBackground,
+  fallbackGroupColor,
+  fallbackGroupPageBackground,
+  groupBlockBackgrounds,
+  groupColors,
+  groupDisplayColors,
+  groupPageBackgrounds,
+} from "@/lib/vaps-group-colors";
 
 const operationOrder = ["S", "F", "C", "P"];
 const orientationOrder = ["O", "L", "G", "M"];
@@ -32,13 +40,25 @@ export default function TypesPage() {
         <div className="type-group-list">
           {Object.entries(groups).map(([groupCode, groupTypes]) => {
             const color = groupColors[groupCode] ?? fallbackGroupColor;
-            const textColor = readableAccentColor(color);
+            const displayColor = groupDisplayColors[groupCode] ?? color;
+            const textColor = readableAccentColor(displayColor);
             const surfaceColor = surfaceAccentColor(color);
+            const pageBackground = groupPageBackgrounds[groupCode] ?? fallbackGroupPageBackground;
+            const blockBackground = groupBlockBackgrounds[groupCode] ?? fallbackGroupBlockBackground;
             return (
               <section
                 className="type-group-section"
                 key={groupCode}
-                style={{ "--group-color": color, "--group-surface-color": surfaceColor, "--group-text-color": textColor } as React.CSSProperties}
+                style={
+                  {
+                    "--group-block-bg": blockBackground,
+                    "--group-color": color,
+                    "--group-display-color": displayColor,
+                    "--group-page-bg": pageBackground,
+                    "--group-surface-color": surfaceColor,
+                    "--group-text-color": textColor,
+                  } as React.CSSProperties
+                }
               >
                 <h2>{groupTypes[0].groupName}</h2>
                 <div className="type-card-grid">

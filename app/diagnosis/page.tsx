@@ -12,20 +12,21 @@ import type { StoredAnswers } from "@/lib/vaps-scoring";
 
 const storageKey = "vapsAnswers";
 const detailScale = [
-  { value: 5, label: "同意しない" },
-  { value: 4, label: "あまり同意しない" },
-  { value: 3, label: "どちらでもない" },
-  { value: 2, label: "少し同意する" },
   { value: 1, label: "同意する" },
+  { value: 2, label: "少し同意する" },
+  { value: 3, label: "どちらでもない" },
+  { value: 4, label: "あまり同意しない" },
+  { value: 5, label: "同意しない" },
 ];
 
 type DiagnosisSection = Array<{ key: string; questions: typeof diagnosisQuestions }>;
+const detailQuestionsPerPage = 5;
 
 function getQuestionSection(question: (typeof diagnosisQuestions)[number]): string {
   return question.kind === "simple" ? question.page : question.category;
 }
 
-const baseSections = diagnosisQuestions.reduce<DiagnosisSection>(
+const simpleSections = diagnosisQuestions.filter((question) => question.kind === "simple").reduce<DiagnosisSection>(
   (items, question) => {
     const key = getQuestionSection(question);
     const last = items[items.length - 1];
@@ -38,6 +39,21 @@ const baseSections = diagnosisQuestions.reduce<DiagnosisSection>(
   },
   [],
 );
+
+const detailQuestions = diagnosisQuestions.filter((question) => question.kind === "detail");
+
+function chunkQuestions(questions: typeof diagnosisQuestions, size: number) {
+  const chunks: DiagnosisSection = [];
+  for (let index = 0; index < questions.length; index += size) {
+    chunks.push({
+      key: `detail_${chunks.length + 1}`,
+      questions: questions.slice(index, index + size),
+    });
+  }
+  return chunks;
+}
+
+const baseSections = [...simpleSections, ...chunkQuestions(detailQuestions, detailQuestionsPerPage)];
 
 function buildQuestionStartIndexes(targetSections: DiagnosisSection) {
   return targetSections.reduce<number[]>((indexes, section, index) => {
@@ -84,17 +100,15 @@ function shuffleQuestions<T>(items: T[], seedText: string) {
 
 function buildRandomizedSections() {
   const seed = getQuestionOrderSeed();
-  return baseSections.map((section) => ({
-    ...section,
-    questions: shuffleQuestions(section.questions, `${seed}:${section.key}`),
-  }));
+  const randomizedDetailQuestions = shuffleQuestions(detailQuestions, `${seed}:all-detail`);
+  return [...simpleSections, ...chunkQuestions(randomizedDetailQuestions, detailQuestionsPerPage)];
 }
 
-function getStepFromLocation() {
+function getStepFromLocation(totalSections = baseSections.length) {
   if (typeof window === "undefined") return 0;
   const value = Number(new URLSearchParams(window.location.search).get("step") ?? "0");
   if (Number.isNaN(value)) return 0;
-  return Math.min(Math.max(value, 0), baseSections.length - 1);
+  return Math.min(Math.max(value, 0), totalSections - 1);
 }
 
 function syncQuestionModeFromLocation() {
@@ -130,19 +144,20 @@ export default function DiagnosisPage() {
       router.replace(fallback);
       return;
     }
-    setSections(buildRandomizedSections());
-    setStep(getStepFromLocation());
+    const nextSections = buildRandomizedSections();
+    setSections(nextSections);
+    setStep(getStepFromLocation(nextSections.length));
     const raw = window.localStorage.getItem(storageKey);
     if (raw) setAnswers(JSON.parse(raw) as StoredAnswers);
   }, [router]);
 
   useEffect(() => {
-    const onPopState = () => setStep(getStepFromLocation());
+    const onPopState = () => setStep(getStepFromLocation(sections.length));
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [sections.length]);
 
-  const currentSection = sections[step];
+  const currentSection = sections[step] ?? sections[0];
   const questionStartIndexes = useMemo(() => buildQuestionStartIndexes(sections), [sections]);
   const section = currentSection.key;
   const progress = Math.round(((step + 1) / sections.length) * 100);
@@ -226,8 +241,8 @@ export default function DiagnosisPage() {
                 ) : (
                   <div className="scale-field" aria-label="同意度">
                     <div className="scale-endpoints">
-                      <span>同意しない</span>
                       <span>同意する</span>
+                      <span>同意しない</span>
                     </div>
                     <div className="scale-dots">
                       {detailScale.map((choice) => (

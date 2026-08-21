@@ -1,6 +1,8 @@
 export type VapsPublicMode = "beta" | "official";
 
-export const vapsPublicMode: VapsPublicMode = "beta";
+const configuredPublicMode = process.env.NEXT_PUBLIC_VAPS_PUBLIC_MODE;
+
+export const vapsPublicMode: VapsPublicMode = configuredPublicMode === "official" ? "official" : "beta";
 
 export const betaConsentVersion = "2026-08-beta-1";
 

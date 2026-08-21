@@ -6,7 +6,15 @@ import { groupExplanations, typeExplanations } from "@/lib/vaps-explanations";
 import { axisKeywords } from "@/lib/vaps-keywords";
 import { recommendedVideos } from "@/lib/vaps-videos";
 import { readableAccentColor, surfaceAccentColor } from "@/lib/vaps-color-utils";
-import { fallbackGroupColor, groupColors } from "@/lib/vaps-group-colors";
+import {
+  fallbackGroupBlockBackground,
+  fallbackGroupColor,
+  fallbackGroupPageBackground,
+  groupBlockBackgrounds,
+  groupColors,
+  groupDisplayColors,
+  groupPageBackgrounds,
+} from "@/lib/vaps-group-colors";
 
 type TypePageProps = {
   params: Promise<{ code: string }>;
@@ -22,8 +30,11 @@ export default async function TypeDetailPage({ params }: TypePageProps) {
   if (!type) notFound();
 
   const color = groupColors[type.groupCode] ?? fallbackGroupColor;
-  const textColor = readableAccentColor(color);
+  const displayColor = groupDisplayColors[type.groupCode] ?? color;
+  const textColor = readableAccentColor(displayColor);
   const surfaceColor = surfaceAccentColor(color);
+  const pageBackground = groupPageBackgrounds[type.groupCode] ?? fallbackGroupPageBackground;
+  const blockBackground = groupBlockBackgrounds[type.groupCode] ?? fallbackGroupBlockBackground;
   const typeExplanation = typeExplanations[type.code];
   const groupExplanation = groupExplanations[type.groupCode];
   const axes = type.code.split("") as Axis[];
@@ -34,9 +45,13 @@ export default async function TypeDetailPage({ params }: TypePageProps) {
     <main className="shell">
       <div
         className="type-detail-page"
+        data-group={type.groupCode}
         style={
           {
             "--group-color": color,
+            "--group-display-color": displayColor,
+            "--group-block-bg": blockBackground,
+            "--group-page-bg": pageBackground,
             "--group-surface-color": surfaceColor,
             "--group-text-color": textColor,
           } as React.CSSProperties

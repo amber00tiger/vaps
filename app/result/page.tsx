@@ -19,7 +19,15 @@ import { groupExplanations, typeExplanations } from "@/lib/vaps-explanations";
 import { axisKeywords } from "@/lib/vaps-keywords";
 import { recommendedVideos } from "@/lib/vaps-videos";
 import { calculateResult, type StoredAnswers, type VapsResult } from "@/lib/vaps-scoring";
-import { fallbackGroupColor, groupColors } from "@/lib/vaps-group-colors";
+import {
+  fallbackGroupBlockBackground,
+  fallbackGroupColor,
+  fallbackGroupPageBackground,
+  groupBlockBackgrounds,
+  groupColors,
+  groupDisplayColors,
+  groupPageBackgrounds,
+} from "@/lib/vaps-group-colors";
 import {
   betaConsentVersion,
   betaStorageKeys,
@@ -142,8 +150,11 @@ export default function ResultPage() {
   const subject = displayName ? `${displayName}さんの診断結果` : "あなたの診断結果";
   const maxScore = Math.max(...Object.values(result.axisScores), 1);
   const groupColor = groupColors[result.groupCode] ?? fallbackGroupColor;
-  const groupTextColor = readableAccentColor(groupColor);
+  const groupDisplayColor = groupDisplayColors[result.groupCode] ?? groupColor;
+  const groupTextColor = readableAccentColor(groupDisplayColor);
   const groupSurfaceColor = surfaceAccentColor(groupColor);
+  const groupPageBackground = groupPageBackgrounds[result.groupCode] ?? fallbackGroupPageBackground;
+  const groupBlockBackground = groupBlockBackgrounds[result.groupCode] ?? fallbackGroupBlockBackground;
   const groupExplanation = groupExplanations[result.groupCode];
   const typeExplanation = typeExplanations[result.typeCode];
   const keywords = buildKeywordItems(result);
@@ -193,7 +204,16 @@ export default function ResultPage() {
     <main className="shell">
       <div
         className={`result-sticky-header ${showResultHeader ? "visible" : ""}`}
-        style={{ "--group-color": groupColor, "--group-surface-color": groupSurfaceColor, "--group-text-color": groupTextColor } as React.CSSProperties}
+        style={
+          {
+            "--group-block-bg": groupBlockBackground,
+            "--group-color": groupColor,
+            "--group-display-color": groupDisplayColor,
+            "--group-page-bg": groupPageBackground,
+            "--group-surface-color": groupSurfaceColor,
+            "--group-text-color": groupTextColor,
+          } as React.CSSProperties
+        }
       >
         <span>{result.core}</span>
         <strong>
@@ -203,11 +223,30 @@ export default function ResultPage() {
       <div
         id="top"
         className="result-layout"
-        style={{ "--group-color": groupColor, "--group-surface-color": groupSurfaceColor, "--group-text-color": groupTextColor } as React.CSSProperties}
+        data-group={result.groupCode}
+        style={
+          {
+            "--group-block-bg": groupBlockBackground,
+            "--group-color": groupColor,
+            "--group-display-color": groupDisplayColor,
+            "--group-page-bg": groupPageBackground,
+            "--group-surface-color": groupSurfaceColor,
+            "--group-text-color": groupTextColor,
+          } as React.CSSProperties
+        }
       >
         <section
           className="result-hero"
-          style={{ "--group-color": groupColor, "--group-surface-color": groupSurfaceColor, "--group-text-color": groupTextColor } as React.CSSProperties}
+          style={
+            {
+              "--group-block-bg": groupBlockBackground,
+              "--group-color": groupColor,
+              "--group-display-color": groupDisplayColor,
+              "--group-page-bg": groupPageBackground,
+              "--group-surface-color": groupSurfaceColor,
+              "--group-text-color": groupTextColor,
+            } as React.CSSProperties
+          }
         >
           {isBetaResult && <span className="beta-result-badge">βテスト結果</span>}
           <div

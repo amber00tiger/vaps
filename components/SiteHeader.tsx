@@ -29,6 +29,7 @@ export function SiteHeader() {
       </Link>
       <nav className="site-nav" aria-label="サイト内メニュー">
         <Link href="/types">タイプ一覧</Link>
+        <Link href="/about">VAPSとは</Link>
         <Link href={diagnosisHref}>診断</Link>
         <Link href="/videos">おすすめ動画</Link>
       </nav>
