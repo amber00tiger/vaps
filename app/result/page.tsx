@@ -139,7 +139,7 @@ export default function ResultPage() {
   }
 
   const displayName = survey.displayName?.trim();
-  const subject = displayName ? `${displayName}縺輔ｓ縺ｮ險ｺ譁ｭ邨先棡` : "縺ゅ↑縺溘・險ｺ譁ｭ邨先棡";
+  const subject = displayName ? `${displayName}さんの診断結果` : "あなたの診断結果";
   const maxScore = Math.max(...Object.values(result.axisScores), 1);
   const groupColor = groupColors[result.groupCode] ?? fallbackGroupColor;
   const groupTextColor = readableAccentColor(groupColor);
@@ -1093,5 +1093,6 @@ function mixWithWhite(hex: string, amount: number) {
   const mix = (channel: number) => Math.round(channel + (255 - channel) * amount);
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
+
 
 
