@@ -26,6 +26,7 @@ export default function BetaPage() {
     window.localStorage.removeItem("vapsAnswers");
     window.localStorage.removeItem("vapsSurvey");
     window.localStorage.removeItem("vapsResultFeedback");
+    window.localStorage.removeItem("vapsQuestionOrderSeed");
     window.localStorage.setItem("vapsQuestionMode", "beta");
     window.localStorage.setItem(betaStorageKeys.consentAccepted, "yes");
     window.localStorage.setItem(betaStorageKeys.consentVersion, betaConsentVersion);
@@ -98,3 +99,4 @@ export default function BetaPage() {
     </main>
   );
 }
+

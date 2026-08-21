@@ -19,11 +19,13 @@ const detailScale = [
   { value: 1, label: "同意する" },
 ];
 
+type DiagnosisSection = Array<{ key: string; questions: typeof diagnosisQuestions }>;
+
 function getQuestionSection(question: (typeof diagnosisQuestions)[number]): string {
   return question.kind === "simple" ? question.page : question.category;
 }
 
-const sections = diagnosisQuestions.reduce<Array<{ key: string; questions: typeof diagnosisQuestions }>>(
+const baseSections = diagnosisQuestions.reduce<DiagnosisSection>(
   (items, question) => {
     const key = getQuestionSection(question);
     const last = items[items.length - 1];
@@ -37,17 +39,62 @@ const sections = diagnosisQuestions.reduce<Array<{ key: string; questions: typeo
   [],
 );
 
-const questionStartIndexes = sections.reduce<number[]>((indexes, section, index) => {
-  const previousStart = indexes[index - 1] ?? 0;
-  const previousLength = sections[index - 1]?.questions.length ?? 0;
-  return [...indexes, previousStart + previousLength];
-}, []);
+function buildQuestionStartIndexes(targetSections: DiagnosisSection) {
+  return targetSections.reduce<number[]>((indexes, section, index) => {
+    const previousStart = indexes[index - 1] ?? 0;
+    const previousLength = targetSections[index - 1]?.questions.length ?? 0;
+    return [...indexes, previousStart + previousLength];
+  }, []);
+}
+
+function getQuestionOrderSeed() {
+  const existing = window.localStorage.getItem("vapsQuestionOrderSeed");
+  if (existing) return existing;
+  const next = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+  window.localStorage.setItem("vapsQuestionOrderSeed", next);
+  return next;
+}
+
+function hashSeed(value: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function seededRandom(seed: number) {
+  let value = seed || 1;
+  return () => {
+    value = Math.imul(1664525, value) + 1013904223;
+    return (value >>> 0) / 4294967296;
+  };
+}
+
+function shuffleQuestions<T>(items: T[], seedText: string) {
+  const shuffled = [...items];
+  const random = seededRandom(hashSeed(seedText));
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function buildRandomizedSections() {
+  const seed = getQuestionOrderSeed();
+  return baseSections.map((section) => ({
+    ...section,
+    questions: shuffleQuestions(section.questions, `${seed}:${section.key}`),
+  }));
+}
 
 function getStepFromLocation() {
   if (typeof window === "undefined") return 0;
   const value = Number(new URLSearchParams(window.location.search).get("step") ?? "0");
   if (Number.isNaN(value)) return 0;
-  return Math.min(Math.max(value, 0), sections.length - 1);
+  return Math.min(Math.max(value, 0), baseSections.length - 1);
 }
 
 function syncQuestionModeFromLocation() {
@@ -74,6 +121,7 @@ export default function DiagnosisPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<StoredAnswers>({});
   const [showError, setShowError] = useState(false);
+  const [sections, setSections] = useState<DiagnosisSection>(baseSections);
 
   useEffect(() => {
     syncQuestionModeFromLocation();
@@ -82,6 +130,7 @@ export default function DiagnosisPage() {
       router.replace(fallback);
       return;
     }
+    setSections(buildRandomizedSections());
     setStep(getStepFromLocation());
     const raw = window.localStorage.getItem(storageKey);
     if (raw) setAnswers(JSON.parse(raw) as StoredAnswers);
@@ -94,6 +143,7 @@ export default function DiagnosisPage() {
   }, []);
 
   const currentSection = sections[step];
+  const questionStartIndexes = useMemo(() => buildQuestionStartIndexes(sections), [sections]);
   const section = currentSection.key;
   const progress = Math.round(((step + 1) / sections.length) * 100);
   const isLastSection = step === sections.length - 1;
@@ -183,7 +233,7 @@ export default function DiagnosisPage() {
                       {detailScale.map((choice) => (
                         <button
                           aria-label={choice.label}
-                          className={`scale-dot ${Number(selected) === choice.value ? "selected" : ""}`}
+                          className={`scale-dot ${selected === choice.value ? "selected" : ""}`}
                           key={choice.value}
                           type="button"
                           onClick={() => selectAnswer(question.id, choice.value)}
@@ -197,22 +247,17 @@ export default function DiagnosisPage() {
               </div>
             );
           })}
-
-          {showError && <p className="error">回答を選択してください。</p>}
-
-          <div className="navigation">
-            <button
-              className="button secondary"
-              type="button"
-              onClick={() => (step === 0 ? router.push(vapsPublicMode === "beta" ? "/beta" : "/") : goTo(step - 1))}
-            >
-              戻る
-            </button>
-            <button className="button" type="button" onClick={proceed} disabled={!isSectionComplete}>
-              次へ
-            </button>
-          </div>
         </section>
+
+        <div className="navigation">
+          <button className="button secondary" disabled={step === 0} onClick={() => goTo(step - 1)} type="button">
+            戻る
+          </button>
+          <button className="button" onClick={proceed} type="button">
+            次へ
+          </button>
+        </div>
+        {showError && <p className="error">未回答の項目があります。</p>}
       </div>
     </main>
   );

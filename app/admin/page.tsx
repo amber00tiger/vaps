@@ -4,8 +4,10 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   averageRating,
   countBy,
+  formatAxisScoresForDisplay,
   readAnalyticsRecords,
   toAnalyticsCsv,
+  toVapsStudioPayload,
   type AnalyticsRecord,
 } from "@/lib/vaps-analytics";
 
@@ -15,6 +17,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [authorized, setAuthorized] = useState(false);
   const [records, setRecords] = useState<AnalyticsRecord[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (window.sessionStorage.getItem("vapsAdminAuthorized") === "yes") {
@@ -33,6 +36,12 @@ export default function AdminPage() {
 
   function refresh() {
     setRecords(readAnalyticsRecords());
+  }
+
+  async function copyStudioPayload(record: AnalyticsRecord) {
+    await navigator.clipboard.writeText(toVapsStudioPayload(record));
+    setCopiedId(record.id);
+    window.setTimeout(() => setCopiedId(null), 1400);
   }
 
   function downloadCsv() {
@@ -135,6 +144,8 @@ export default function AdminPage() {
                   <th>価値タイプ</th>
                   <th>一致度</th>
                   <th>納得度</th>
+                  <th>軸スコア</th>
+                  <th>Studio</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,6 +164,12 @@ export default function AdminPage() {
                     </td>
                     <td>{record.identityMatch}</td>
                     <td>{record.rating}</td>
+                    <td className="axis-score-cell">{formatAxisScoresForDisplay(record)}</td>
+                    <td>
+                      <button className="mini-button" onClick={() => copyStudioPayload(record)} type="button">
+                        {copiedId === record.id ? "コピー済" : "コピー"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -39,7 +39,7 @@ type RelatedType = {
   core: string;
 };
 
-const graphAxisOrder: Axis[] = ["R", "H", "E", "A", "C", "P", "S", "F", "M", "G", "L", "O"];
+const graphAxisOrder: Axis[] = ["H", "R", "A", "E", "S", "F", "C", "P", "O", "L", "G", "M"];
 
 export default function ResultPage() {
   const [answers, setAnswers] = useState<StoredAnswers | null>(null);
@@ -180,6 +180,7 @@ export default function ResultPage() {
     window.localStorage.removeItem("vapsAnswers");
     window.localStorage.removeItem("vapsSurvey");
     window.localStorage.removeItem("vapsResultFeedback");
+    window.localStorage.removeItem("vapsQuestionOrderSeed");
     if (vapsPublicMode === "beta") {
       location.href = "/beta";
       return;
@@ -1092,3 +1093,5 @@ function mixWithWhite(hex: string, amount: number) {
   const mix = (channel: number) => Math.round(channel + (255 - channel) * amount);
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
+
+

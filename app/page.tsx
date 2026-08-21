@@ -14,51 +14,96 @@ export default function Home() {
     if (vapsPublicMode === "beta") {
       router.replace("/beta");
     }
-  }, []);
+  }, [router]);
+
+  function clearDiagnosisState() {
+    window.localStorage.removeItem("vapsAnswers");
+    window.localStorage.removeItem("vapsSurvey");
+    window.localStorage.removeItem("vapsResultFeedback");
+    window.localStorage.removeItem("vapsQuestionOrderSeed");
+  }
 
   function startNew() {
     if (vapsPublicMode === "beta") {
       router.push("/beta");
       return;
     }
-    window.localStorage.removeItem("vapsAnswers");
-    window.localStorage.removeItem("vapsSurvey");
-    window.localStorage.removeItem("vapsResultFeedback");
+    clearDiagnosisState();
     window.localStorage.setItem("vapsQuestionMode", "official");
     router.push("/diagnosis?mode=official&step=0");
   }
 
   return (
-    <main className="shell">
-      <div className="container hero">
-        <div>
-          <h1>VAPS64タイプ性格診断</h1>
+    <main className="shell home-shell">
+      <section className="home-hero container">
+        <div className="home-hero-copy">
+          <p className="hero-kicker">思考・判断・行動の3層から、あなたの価値観と行動傾向を読み解く</p>
+          <h1>VAPS64</h1>
+          <p className="hero-subtitle">タイプ性格診断</p>
           <p className="lead">
-            思考・判断・行動の3層から、あなたの価値観と行動傾向を読み取る診断です。
-            簡易診断、詳細診断、任意アンケートの順に進み、最後にタイプ結果を表示します。
+            簡易診断から詳細診断まで。あなたのタイプを、理論に基づいて分析します。
           </p>
-          <div className="home-menu">
+          <div className="home-menu compact">
             <button className="home-menu-item primary" type="button" onClick={startNew}>
-              <strong>新しく質問に答える</strong>
-              <span>保存済みの回答を消して、最初から診断します。</span>
+              <strong>診断をはじめる</strong>
+              <span>新しい回答で最初から診断します。</span>
             </button>
             <Link className={`home-menu-item ${hasPrevious ? "" : "disabled"}`} href={hasPrevious ? "/diagnosis?step=0" : "#"}>
-              <strong>今までの回答を編集する</strong>
-              <span>前回の回答を残したまま、質問画面から編集します。</span>
+              <strong>前回の回答を編集する</strong>
+              <span>保存済みの回答を続きから編集します。</span>
             </Link>
             <Link className={`home-menu-item ${hasPrevious ? "" : "disabled"}`} href={hasPrevious ? "/result" : "#"}>
               <strong>前回の結果を見る</strong>
-              <span>保存されている回答から、結果ページを表示します。</span>
+              <span>このブラウザに残っている結果を表示します。</span>
             </Link>
           </div>
-          <Link className="text-link" href="/about">
-            VAPSってなに？
-          </Link>
-          <Link className="text-link home-sub-link" href="/types">
-            タイプ一覧を見る
-          </Link>
         </div>
-      </div>
+        <div className="home-visual" aria-hidden="true">
+          <div className="home-arch">
+            <img src="/images/brand/vaps-logo-mark.png" alt="" />
+          </div>
+        </div>
+      </section>
+
+      <section className="home-overview container">
+        <div>
+          <h2>VAPSは、3つの視点で人を捉えます。</h2>
+          <Link className="text-link" href="/about">もっと詳しく見る</Link>
+        </div>
+        <div className="home-pillar-grid">
+          <article>
+            <strong>思考</strong>
+            <span>THINKING</span>
+            <p>何を見るか、どんな情報を大事にするか</p>
+          </article>
+          <article>
+            <strong>判断</strong>
+            <span>JUDGEMENT</span>
+            <p>どう決めるか、何を基準に選ぶか</p>
+          </article>
+          <article>
+            <strong>行動</strong>
+            <span>ACTION</span>
+            <p>どう動くか、どんな行動をとるか</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="home-type-strip container">
+        <div>
+          <span>12</span>
+          <p>の軸</p>
+        </div>
+        <div>
+          <span>16</span>
+          <p>のグループ</p>
+        </div>
+        <div>
+          <span>64</span>
+          <p>のタイプ</p>
+        </div>
+        <Link className="text-link" href="/types">タイプ一覧を見る</Link>
+      </section>
     </main>
   );
 }

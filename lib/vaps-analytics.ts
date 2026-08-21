@@ -1,3 +1,4 @@
+import type { Axis } from "./vaps-data";
 import type { VapsResult } from "./vaps-scoring";
 
 export type SurveyAnalytics = {
@@ -23,11 +24,13 @@ export type AnalyticsRecord = {
   valueTypeCode: string;
   valueTypeName: string;
   identityMatch: VapsResult["identityMatch"];
+  axisScores: Record<Axis, number>;
   rating: number;
   survey: SurveyAnalytics;
 };
 
 export const analyticsStorageKey = "vapsAnalyticsRecords";
+export const studioAxisOrder: Axis[] = ["H", "R", "A", "E", "S", "F", "C", "P", "O", "L", "G", "M"];
 
 export function buildAnalyticsRecord(
   result: VapsResult,
@@ -37,6 +40,7 @@ export function buildAnalyticsRecord(
   meta: { consentVersion?: string; responseId?: string } = {},
 ): AnalyticsRecord {
   return {
+    axisScores: result.axisScores,
     createdAt: new Date().toISOString(),
     consentVersion: meta.consentVersion,
     groupCode: result.groupCode,
@@ -99,6 +103,7 @@ export function toAnalyticsCsv(records: AnalyticsRecord[]) {
     "valueTypeName",
     "identityMatch",
     "rating",
+    ...studioAxisOrder.map((axis) => `axis_${axis}`),
     "ageGroup",
     "gender",
     "region",
@@ -118,6 +123,7 @@ export function toAnalyticsCsv(records: AnalyticsRecord[]) {
       record.valueTypeName,
       record.identityMatch,
       String(record.rating),
+      ...studioAxisOrder.map((axis) => String(record.axisScores?.[axis] ?? "")),
       record.survey.ageGroup ?? "",
       record.survey.gender ?? "",
       record.survey.region ?? "",
@@ -125,6 +131,28 @@ export function toAnalyticsCsv(records: AnalyticsRecord[]) {
   );
 
   return [headers, ...rows].map((row) => row.join(",")).join("\n");
+}
+
+export function toVapsStudioPayload(record: AnalyticsRecord) {
+  return JSON.stringify({
+    responseId: record.responseId ?? record.id,
+    source: record.source ?? "official",
+    createdAt: record.createdAt,
+    typeCode: record.typeCode,
+    typeName: record.typeName,
+    groupCode: record.groupCode,
+    groupName: record.groupName,
+    state: record.state,
+    valueTypeCode: record.valueTypeCode,
+    valueTypeName: record.valueTypeName,
+    identityMatch: record.identityMatch,
+    axisOrder: studioAxisOrder,
+    axisScores: Object.fromEntries(studioAxisOrder.map((axis) => [axis, record.axisScores?.[axis] ?? 0])),
+  });
+}
+
+export function formatAxisScoresForDisplay(record: AnalyticsRecord) {
+  return studioAxisOrder.map((axis) => `${axis}:${record.axisScores?.[axis] ?? "-"}`).join(" / ");
 }
 
 function escapeCsv(value: string) {
