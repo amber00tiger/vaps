@@ -1,2 +1,0 @@
-:HL["/vaps/_next/static/chunks/0tbfkztcl8l-7.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"lOrSChhmii0dv6h6fWsP6"}
